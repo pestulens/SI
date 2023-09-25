@@ -1,0 +1,61 @@
+close all;clc;clear
+Data = readmatrix("20230908_40bar_60D_S84000.txt");
+Data = Data(11:end,:);
+
+t = Data(:,1) ;     %time (s)
+Pt = Data(:,2) ;    %Tank pressure (bar)
+Puv = Data(:,3);    %Pressure in control valve upstream (bar)
+Pdv = Data(:,4);    %Pressure in control valve downstream (bar)
+Pcat = Data(:,5);   %Pressure in catalyst (bar)
+Pc = Data(:,6);     %Chamber pressure (bar)
+T = Data(:,7);      %Temperature (degree)
+dm = Data(:,8);     %Mass flow rate (g/s)
+thru = Data(:,9);   %Thrust (kgf)
+x = find( Data(:,10)==1 ); % open valve signal
+u = zeros(length(t),1);
+u( x(1)+100:x(end)+100 ) = 1;
+
+%% plot data
+ts = 5*10^3;
+tp = t(x(1)-ts:x(end)+ts);
+
+figure(1)
+plot(tp,Pt(x(1)-ts:x(end)+ts),tp,Puv(x(1)-ts:x(end)+ts),tp,Pdv(x(1)-ts:x(end)+ts),tp,Pcat(x(1)-ts:x(end)+ts),tp,Pc(x(1)-ts:x(end)+ts),tp,u(x(1)-ts:x(end)+ts))
+xlabel("time(s)")
+ylabel("Pressure(bar)")
+legend("Tank pressure","Pressure in control valve upstream ","Pressure in control valve downstream ","Pressure in catalyst","Chamber pressure")
+title("pressure plot")
+
+figure(2)
+plot(tp,thru(x(1)-ts:x(end)+ts),tp,u(x(1)-ts:x(end)+ts))
+xlabel("time(s)")
+ylabel("thrust(kgf)")
+title("thrust plot")
+
+figure(3)
+plot(tp,T(x(1)-ts:x(end)+ts),tp,u(x(1)-ts:x(end)+ts))
+xlabel("time(s)")
+ylabel("Temperature(degree)")
+title("Temperature plot")
+
+figure(4)
+plot(tp,dm(x(1)-ts:x(end)+ts),tp,u(x(1)-ts:x(end)+ts))
+xlabel("time(s)")
+ylabel("Mass flow rate(degree)")
+title("Mass flow rate plot")
+
+%% SI
+% thru = thru(x(1)-ts:x(end)+ts);
+% u = u(x(1)-ts:x(end)+ts);
+% t = t(x(1)-ts:x(end)+ts);
+% z1 = iddata(thru,u,0.001);
+% z2 = iddata(Pc,u,0.001);
+% z3 = iddata(T,u,0.001);
+% z4 = iddata(dm,u,0.001);
+
+%% DMD
+
+X = Data(:,2:9)'; 
+X = X(:,1:end-1);
+% Xd = 
+[U,S,V] =svd([dm';thru';Pc';Pcat';Puv';Pdv';Pt'],"econ");
